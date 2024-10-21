@@ -21,7 +21,6 @@ def read_hojin_csv():
             reader = csv.reader(f)
             hojin_list.extend(reader)
 
-# メイン処理
 def get_hoken(hojin_id, pref_id):
     global driver
     result = []
@@ -60,7 +59,6 @@ def get_hoken(hojin_id, pref_id):
     # 最初の列を削除
     return result[1:]
 
-
 if __name__ == '__main__':
     # 開始行と終了行を引数で指定
     if len(sys.argv) != 3:
@@ -70,12 +68,18 @@ if __name__ == '__main__':
         start = int(sys.argv[1])
         end = int(sys.argv[2])
 
+    # CSVファイルを読み込み
     print('load csv...', end='', flush=True)
     read_hojin_csv()
     print(f'ok! {len(hojin_list)} 件')
 
+    # 開始行と終了行を指定
     hojin_list = hojin_list[start:end]
     print(f'start: {start} end: {end} total: {len(hojin_list)}件')
+
+    # 結果ファイルが存在する場合はリネーム
+    if os.path.exists(f'result-{start}-{end}.csv'):
+        os.rename(f'result-{start}-{end}.csv', f'result-{start}-{end}-{time.strftime("%Y%m%d%H%M%S")}.bak')
 
     # メインループ
     for idx, hojin in enumerate(hojin_list):
@@ -87,11 +91,9 @@ if __name__ == '__main__':
         print(f'{idx+1}/{len(hojin_list)} {hojin_id} {pref_id}')
         
         result = get_hoken(hojin_id, pref_id)
-        # resultをresult.csvにアペンド
-        with open('result.csv', 'a') as f:
+        # 結果をCSVに書き込み
+        with open(f'result-{start}-{end}.csv', 'a') as f:
             writer = csv.writer(f, lineterminator='\n')
             for row in result:
                 writer.writerow([hojin_id] + row)
         time.sleep(0.8)
-    
-
