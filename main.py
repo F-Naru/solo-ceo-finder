@@ -6,14 +6,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-hojin_list = []
-options = selenium.webdriver.ChromeOptions()
-options.add_argument('--headless=new')
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
-driver = selenium.webdriver.Chrome(options=options)
-
-def read_hojin_csv():
-    global hojin_list
+def read_hojin_csv(hojin_list=[]):
     # 法人番号のCSVファイルを読込
     files = glob.glob('hojin-csv/*.csv')
     # print(files)
@@ -67,9 +60,18 @@ if __name__ == '__main__':
         start = int(sys.argv[1])
         end = int(sys.argv[2])
 
+    # ブラウザの起動
+    hojin_list = []
+    options = selenium.webdriver.ChromeOptions()
+    options.add_argument('--headless=new')
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
+    user_data_dir = os.path.join(os.getcwd(), f"user_data_{start}") # ユーザーディレクトリをstartにする
+    options.add_argument(f"user-data-dir={user_data_dir}")
+    driver = selenium.webdriver.Chrome(options=options)    
+
     # CSVファイルを読み込み
     print('load csv...', end='', flush=True)
-    read_hojin_csv()
+    read_hojin_csv(hojin_list)
     print(f'ok! {len(hojin_list)} 件')
 
     # 開始行と終了行を指定
