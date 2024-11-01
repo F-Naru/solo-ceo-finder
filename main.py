@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 hojin_list = []
 options = selenium.webdriver.ChromeOptions()
 options.add_argument('--headless=new')
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
 driver = selenium.webdriver.Chrome(options=options)
 
 def read_hojin_csv():
@@ -21,9 +22,8 @@ def read_hojin_csv():
             reader = csv.reader(f)
             hojin_list.extend(reader)
 
-def get_hoken(hojin_id, pref_id):
+def is_solo_ceo(hojin_id, pref_id):
     global driver
-    result = []
     url = 'https://chosyu-web.mhlw.go.jp/LIC_D/workplaceSearch'
     driver.get(url)
     # ページが開くまで待機
@@ -40,7 +40,9 @@ def get_hoken(hojin_id, pref_id):
     # 結果が表示されるまで待機
     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'total')))
     # 件数
-    #hit_num = int(driver.find_element(By.CLASS_NAME, 'total').text.split('件')[0])
+    hit_num = int(driver.find_element(By.CLASS_NAME, 'total').text.split('件')[0])
+    if hit_num == 0:
+        return False # 0件の場合はひとり社長ではない
     #print(hit_num)
     # 表を取得
     table = driver.find_element(By.ID, 'resultItem')
@@ -53,11 +55,8 @@ def get_hoken(hojin_id, pref_id):
         # tdsの文字列を取得
         tds_text = [''.join(td.text.strip().split("\n")) for td in tds]
         if '雇用保険' in tds_text[3]:
-            continue
-        else:
-            result.append([tds_text[0], tds_text[1], tds_text[2], tds_text[3]])
-    # 最初の列を削除
-    return result[1:]
+            return False # 雇用保険を含む場合はひとり社長ではない
+    return True
 
 if __name__ == '__main__':
     # 開始行と終了行を引数で指定
@@ -90,10 +89,10 @@ if __name__ == '__main__':
             continue
         print(f'{idx+1}/{len(hojin_list)} {hojin_id} {pref_id}')
         
-        result = get_hoken(hojin_id, pref_id)
-        # 結果をCSVに書き込み
-        with open(f'result-{start}-{end}.csv', 'a') as f:
-            writer = csv.writer(f, lineterminator='\n')
-            for row in result:
-                writer.writerow([hojin_id] + row)
+        result = is_solo_ceo(hojin_id, pref_id)
+        if result: 
+            # 結果をCSVに書き込み
+            with open(f'result-{start}-{end}.csv', 'a') as f:
+                writer = csv.writer(f, lineterminator='\n')
+                writer.writerow(hojin)
         time.sleep(0.8)
