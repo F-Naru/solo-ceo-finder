@@ -9,9 +9,8 @@ do
   END=$(((i + 1) * BATCH_SIZE))
   THREAD_NUM=$((i + 1))
   
-  # Pythonスクリプトをバックグラウンドで実行し、START, END, THREAD_NUMを渡す
-  python my_script.py $START $END $THREAD_NUM &
+  # screenセッションを作成し、Pythonスクリプトを実行
+  screen -dmS "thread_$THREAD_NUM" bash -c "python3 main.py $START $END $THREAD_NUM; exec bash"
 done
 
-# すべてのバックグラウンドジョブが終了するのを待機
-wait
+echo "すべてのスレッドがscreenセッションで開始されました。"

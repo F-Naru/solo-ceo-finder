@@ -22,39 +22,44 @@ def read_hojin_csv(hojin_list=[]):
 
 def is_solo_ceo(hojin_id, pref_id):
     global driver
-    url = 'https://chosyu-web.mhlw.go.jp/LIC_D/workplaceSearch'
-    driver.get(url)
-    # ページが開くまで待機
-    WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
-    # 都道府県の選択
-    pref_id_input = driver.find_element(By.ID, 'prefCd')
-    select = Select(pref_id_input)
-    select.select_by_index(pref_id)
-    # 法人番号の入力
-    hojin_no_input = driver.find_element(By.ID, 'hojinNo')
-    hojin_no_input.send_keys(hojin_id)
-    # 検索ボタンクリック
-    driver.find_element(By.NAME, 'go').click()
-    # 結果が表示されるまで待機
-    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'total')))
-    # 件数
-    hit_num = int(driver.find_element(By.CLASS_NAME, 'total').text.split('件')[0])
-    if hit_num == 0:
-        return False # 0件の場合はひとり社長ではない
-    #print(hit_num)
-    # 表を取得
-    table = driver.find_element(By.ID, 'resultItem')
-    rows = table.find_elements(By.TAG_NAME, 'tr')
-    for row in rows:
-        # tdで分割
-        tds = row.find_elements(By.TAG_NAME, 'td')
-        if len(tds) != 4:
-            continue
-        # tdsの文字列を取得
-        tds_text = [''.join(td.text.strip().split("\n")) for td in tds]
-        if '雇用保険' in tds_text[3]:
-            return False # 雇用保険を含む場合はひとり社長ではない
-    return True
+    try:
+        url = 'https://chosyu-web.mhlw.go.jp/LIC_D/workplaceSearch'
+        driver.get(url)
+        # ページが開くまで待機
+        WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
+        # 都道府県の選択
+        pref_id_input = driver.find_element(By.ID, 'prefCd')
+        select = Select(pref_id_input)
+        select.select_by_index(pref_id)
+        # 法人番号の入力
+        hojin_no_input = driver.find_element(By.ID, 'hojinNo')
+        hojin_no_input.send_keys(hojin_id)
+        # 検索ボタンクリック
+        driver.find_element(By.NAME, 'go').click()
+        # 結果が表示されるまで待機
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'total')))
+        # 件数
+        hit_num = int(driver.find_element(By.CLASS_NAME, 'total').text.split('件')[0])
+        if hit_num == 0:
+            return False # 0件の場合はひとり社長ではない
+        #print(hit_num)
+        # 表を取得
+        table = driver.find_element(By.ID, 'resultItem')
+        rows = table.find_elements(By.TAG_NAME, 'tr')
+        for row in rows:
+            # tdで分割
+            tds = row.find_elements(By.TAG_NAME, 'td')
+            if len(tds) != 4:
+                continue
+            # tdsの文字列を取得
+            tds_text = [''.join(td.text.strip().split("\n")) for td in tds]
+            if '雇用保険' in tds_text[3]:
+                return False # 雇用保険を含む場合はひとり社長ではない
+        return True
+    except:
+        # エラーが発生した場合はリトライ
+        time.sleep(10)
+        return is_solo_ceo(hojin_id, pref_id)
 
 if __name__ == '__main__':
     # 開始行と終了行を引数で指定
