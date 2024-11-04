@@ -11,9 +11,14 @@ def read_hojin_csv(hojin_list=[]):
     files = glob.glob('hojin-csv/*.csv')
     # print(files)
     for file in files:
-        with open(file, 'r') as f:
-            reader = csv.reader(f)
-            hojin_list.extend(reader)
+        try:
+            with open(file, 'r') as f:
+                reader = csv.reader(f)
+                hojin_list.extend(reader)
+        except:
+            with open(file, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                hojin_list.extend(reader)
 
 def is_solo_ceo(hojin_id, pref_id):
     global driver
@@ -53,21 +58,23 @@ def is_solo_ceo(hojin_id, pref_id):
 
 if __name__ == '__main__':
     # 開始行と終了行を引数で指定
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         start = 0
         end = -1
+        number = 0
     else:
         start = int(sys.argv[1])
         end = int(sys.argv[2])
+        number = int(sys.argv[3])
 
     # ブラウザの起動
     hojin_list = []
     options = selenium.webdriver.ChromeOptions()
     options.add_argument('--headless=new')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
+    options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.3{number%10}")
     user_data_dir = os.path.join(os.getcwd(), f"user_data_{start}") # ユーザーディレクトリをstartにする
     options.add_argument(f"user-data-dir={user_data_dir}")
-    driver = selenium.webdriver.Chrome(options=options)    
+    driver = selenium.webdriver.Chrome(options=options)
 
     # CSVファイルを読み込み
     print('load csv...', end='', flush=True)
@@ -97,4 +104,4 @@ if __name__ == '__main__':
             with open(f'result-{start}-{end}.csv', 'a') as f:
                 writer = csv.writer(f, lineterminator='\n')
                 writer.writerow(hojin)
-        time.sleep(0.8)
+        time.sleep(1.0)
